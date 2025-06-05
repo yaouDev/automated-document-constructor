@@ -1,0 +1,38 @@
+% VVV these are pandoc markers, needed to inject
+$if(fontfamily)$
+\usepackage[$fontfamilyopts$]{fontspec}
+$else$
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+$endif$
+\usepackage{amsmath,amssymb,amstext}
+\usepackage{graphicx} % Required for \includegraphics (to include images)
+\usepackage[margin=1in]{geometry} % For setting page margins (adjust '1in' as needed)
+
+% eso-pic is for backgrounds
+\usepackage{eso-pic}
+
+% This command places the background image on every page
+\AddToShipoutPictureBG{%
+  \AtPageLowerLeft{%
+    \includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio]{images/bullfinch.jpg}%
+    % the last part of the above should be the path to your desired background
+  }%
+}
+
+% VVV to add watermarks
+% \usepackage{xcolor} % For colors
+% \AddToShipoutPictureBG{%
+%   \AtTextCenter{%
+%     \put(0,0){%
+%       \makebox(0,0)[c]{\normalsize\sffamily\color{gray!30}\rotatebox{45}{DRAFT DOCUMENT}}%
+%     }%
+%   }%
+% }
+
+
+\begin{document}
+
+$body$ % this is where the markdown files go
+
+\end{document}
