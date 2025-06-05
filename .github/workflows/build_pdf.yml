@@ -35,6 +35,9 @@ jobs:
 
       - name: Compile PDF with Pandoc
         run: |
+          OUTPUT_FILENAME="versions/manual-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf"
+          echo "Compiling PDF as: $OUTPUT_FILENAME"
+        
           pandoc \
             --from markdown \
             --to pdf \
