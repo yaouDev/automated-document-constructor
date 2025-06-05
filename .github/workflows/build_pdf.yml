@@ -39,15 +39,6 @@ jobs:
           echo "Found Markdown files for PDF compilation: $FILE_LIST"
           echo "file_list=$FILE_LIST" >> $GITHUB_OUTPUT
 
-      - name: Verify Image File Existence and Path # this is for debugging!
-        run: |
-          echo "--- Listing contents of images/tex_resources/ ---"
-          ls -l images/tex_resources/
-          echo ""
-          echo "--- Checking file type for images/tex_resources/commonswift.jpg ---"
-          file images/tex_resources/commonswift.jpg
-        continue-on-error: true
-
       - name: Compile PDF with Pandoc
         run: |
           OUTPUT_FILENAME="versions/manual-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf"
@@ -60,8 +51,8 @@ jobs:
             --table-of-contents \
             --toc-depth=3 \
             --number-sections \
-            --resource-path=./images/tex_resources \
-            --template=./templates/pdf_template.tex \
+            # --resource-path=./images/tex_resources \
+            # --template=./templates/pdf_template.tex \ # these two parameters can be included to make the document from a template but requires some finetuning to work well
             ${{ steps.markdown_files_list.outputs.file_list }} # the markdown documents found in previous step
 
       - name: Configure Git User (Bot)
