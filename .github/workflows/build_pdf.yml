@@ -51,14 +51,8 @@ jobs:
             --table-of-contents \
             --toc-depth=3 \
             --number-sections \
+            --template=./templates/pdf_template.tex
             ${{ steps.markdown_files_list.outputs.file_list }} # the markdown documents found in previous step
-
-      - name: Upload PDF artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: manual-pdf-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}
-          path: versions/manual-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf
-          retention-days: 1 # how long to keep the artifact, needed??
 
       - name: Configure Git User (Bot)
         run: |
