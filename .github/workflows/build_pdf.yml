@@ -10,6 +10,9 @@ jobs:
   build_pdf:
     runs-on: ubuntu-latest # use static version?
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4 
@@ -52,4 +55,22 @@ jobs:
         with:
           name: manual-pdf-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}
           path: versions/manual-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf
-          retention-days: 7 # how long to keep the artifact, needed??
+          retention-days: 1 # how long to keep the artifact, needed??
+
+      - name: Configure Git User (Bot)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+
+      - name: Commit and Push PDF to Repository
+        run: |
+          PDF_FILE="versions/manual-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf"
+          git add "$PDF_FILE"
+          if git diff --cached --exit-code; then # check for changes
+            echo "No new PDF changes to commit."
+          else
+            git commit -m "feat(manual): Add manual ${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }} [skip ci]" # IMPORTANT!! do not remove skip ci or it will loop forever
+            git push origin ${{ github.ref_name }} # this could be a different branch to avoid errors
+            echo "Successfully pushed $PDF_FILE to the repository."
+          fi
