@@ -1,1 +1,52 @@
+name: Build PDF Manual from Markdown
 
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # manual trigger
+
+jobs:
+  build_pdf:
+    runs-on: ubuntu-latest # use static version?
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4 
+
+      - name: Get current date and run number for versioning
+        id: version_info
+        run: |
+          echo "CURRENT_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+          echo "RUN_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV # used to get unique output everytime a manual is generated
+          echo "Generated version suffix: ${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}"
+
+      - name: Install Pandoc and LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-latex-extra texlive-fonts-recommended
+
+      - name: Get list of Markdown files in desired order
+        id: markdown_files_list
+        run: |
+          FILE_LIST=$(find docs -name "*.md" | sort | tr '\n' ' ') # convert newlines to spaces so pandoc can read them as args
+          echo "Found Markdown files for PDF compilation: $FILE_LIST"
+          echo "file_list=$FILE_LIST" >> $GITHUB_OUTPUT
+
+      - name: Compile PDF with Pandoc
+        run: |
+          pandoc \
+            --from markdown \
+            --to pdf \
+            --output "$OUTPUT_FILENAME" \
+            --table-of-contents \
+            --toc-depth=3 \
+            --number-sections \
+            ${{ steps.markdown_files_list.outputs.file_list }} # the markdown documents found in previous step
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-pdf-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}
+          path: versions/manual-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf
+          retention-days: 7 # how long to keep the artifact, needed??
