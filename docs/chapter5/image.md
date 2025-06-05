@@ -1,1 +1,1 @@
-![bullfinch](../images/bullfinch.jpg)
+![bullfinch](/images/bullfinch.jpg)
