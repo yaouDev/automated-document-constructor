@@ -1,33 +1,38 @@
-\documentclass[$documentclass$]{scrartcl} % 'article', 'report', 'book', or 'scrartcl' not sure which is best
+\documentclass[$documentclass$]{scrartcl} % there are other base classes as well such as article
 
-% VVV these are pandoc markers, needed to inject
+% pandoc settings
 $if(fontfamily)$
-\usepackage[$fontfamilyopts$]{fontspec}
+\usepackage[$fontfamilyopts$]{fontspec} % Used with XeLaTeX/LuaLaTeX (often Pandoc's default backend)
 $else$
-\usepackage{lmodern}
-\usepackage[T1]{fontenc}
+\usepackage{lmodern} % Fallback font for pdflatex
+\usepackage[T1]{fontenc} % Font encoding for pdflatex
 $endif$
-\usepackage{amsmath,amssymb,amstext}
-\usepackage{graphicx} % Required for \includegraphics (to include images)
-\usepackage[margin=1in]{geometry} % For setting page margins (adjust '1in' as needed)
 
-% eso-pic is for backgrounds
+% std packages
+\usepackage{amsmath,amssymb,amstext}
+\usepackage{graphicx}
+
+% setting page margins and dimensions
+\usepackage[margin=1in]{geometry}
+
+% placing content
 \usepackage{eso-pic}
-% not sure what this is but it wont work without it
+
+% hyperlinks
 \usepackage{hyperref}
 
-% This command places the background image on every page
+% background image placement - will look where the yml has placed --resource-path (change the last part of the long line to the background)
 \AddToShipoutPictureBG{%
   \AtPageLowerLeft{%
     \includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio]{commonswift.jpg}%
-    % the last part of the above should be the path to your desired background
   }%
 }
 
-% VVV to add watermarks
-% \usepackage{xcolor} % For colors
+% watermark placement if needed
+% Requires \usepackage{xcolor} if you use color commands like \color{gray!30}
+% \usepackage{xcolor}
 % \AddToShipoutPictureBG{%
-%   \AtTextCenter{%
+%   \AtTextCenter{% % Positions the watermark in the center of the text area
 %     \put(0,0){%
 %       \makebox(0,0)[c]{\normalsize\sffamily\color{gray!30}\rotatebox{45}{DRAFT DOCUMENT}}%
 %     }%
@@ -35,8 +40,9 @@ $endif$
 % }
 
 
+% produces the actual document
 \begin{document}
 
-$body$ % this is where the markdown files go
+$body$
 
 \end{document}
