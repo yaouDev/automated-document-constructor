@@ -113,6 +113,7 @@ $endif$
 % ---------------------
 $if(title)$
 \maketitle
+\thispagestyle{empty}
 $endif$
 
 % Abstract
@@ -121,22 +122,26 @@ $if(abstract)$
 \begin{abstract}
 $abstract$
 \end{abstract}
+\thispagestyle{empty}
 $endif$
 
-% Table of Contents (THIS IS THE IMPORTANT SECTION TO EDIT)
+% Table of Contents
 % ---------------------------------
 $if(toc)$
 \clearpage
 \tableofcontents
+\thispagestyle{plain}
 $endif$
 
 % List of Figures/Tables (if desired)
 % ---------------------------------
 $if(lof)$
 \listoffigures
+\thispagestyle{plain}
 $endif$
 $if(lot)$
 \listoftables
+\thispagestyle{plain}
 $endif$
 
 % Main document content
