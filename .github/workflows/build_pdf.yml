@@ -1,4 +1,4 @@
-name: Build PDF Manual from Markdown
+name: Build PDF
 
 on:
   push:
@@ -19,10 +19,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4 
-
-      - name: Ensure permissions for docs
-        run: |
-          chmod -R +rx .
 
       - name: Get current date and run number for versioning
         id: version_info
@@ -55,9 +51,14 @@ jobs:
             --table-of-contents \
             --toc-depth=3 \
             --number-sections \
-            # --resource-path=./images/tex_resources \
-            # --template=./templates/pdf_template.tex \ # these two parameters can be included to make the document from a template but requires some finetuning to work well
+            --template=./templates/template.tex \
             ${{ steps.markdown_files_list.outputs.file_list }} # the markdown documents found in previous step
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-pdf-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}
+          path: versions/manual-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf
 
       - name: Configure Git User (Bot)
         run: |
