@@ -1,0 +1,165 @@
+% !TEX program = xelatex
+% !TEX TS-program = xelatex
+% This is a Pandoc LaTeX template. It is designed to be used with
+% Pandoc to convert Markdown to LaTeX/PDF.
+%
+% This template tries to be compatible with a wide range of LaTeX
+% distributions and setups, including modern ones like XeLaTeX and
+% LuaLaTeX.
+%
+% For more information on Pandoc templates, see:
+% https://pandoc.org/MANUAL.html#templates
+%
+%
+% Document Class Options
+% --------------------
+% Various options can be set via Pandoc variables.
+% Example: pandoc --variable=fontsize:12pt --variable=papersize:a4
+%
+% Default options (adjust as needed):
+$if(documentclass)$
+\documentclass[$if(fontsize)$fontsize=$fontsize$,$endif$$if(papersize)$papersize=$papersize$,$endif$$if(classoption)$$classoption$,$endif$]{$documentclass$}
+$else$
+\documentclass[10pt,a4paper]{article} % Default document class if not specified
+$endif$
+
+% Language and Encoding
+% ---------------------
+$if(polyglossia)$
+\usepackage{polyglossia}
+$else$
+$if(babel)$
+\usepackage[$babelpackages$]{babel}
+$endif$
+$endif$
+$if(fontfamily)$
+\usepackage{$fontfamily$}
+$endif$
+$if(fontenc)$
+\usepackage{$fontenc$}
+$endif$
+$if(latinmodern)$
+\usepackage{lmodern}
+$endif$
+\usepackage{amsfonts, amsmath, amssymb} % Basic math packages
+\usepackage{graphicx} % For images
+\usepackage{xurl} % For better URL breaking
+\usepackage{csquotes} % For smarter quotation marks
+\usepackage{hyperref} % For hyperlinks and PDF metadata
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    pdftitle={$title$},
+    pdfauthor={$author$},
+    pdfkeywords={$keywords$}
+}
+% Other standard packages
+\usepackage{booktabs} % For better tables
+\usepackage{longtable} % For multi-page tables
+\usepackage{array} % For table column formatting
+\usepackage{calc} % For calculations in LaTeX
+\usepackage{setspace} % For line spacing
+\usepackage{etoolbox} % For command redefinition
+\usepackage{geometry} % For page margins
+$if(geometry)$
+\usepackage[$geometry$]{geometry}
+$endif$
+$if(header-includes)$
+$header-includes$
+$endif$
+
+% Define custom commands/environments from header-includes for markdown
+$if(header-includes)$
+$for(header-includes)$
+$header-includes$
+$endfor$
+$endif$
+
+% Start each section with a page break
+\preto\section{\clearpage}
+
+% Custom variables for LaTeX
+$for(variable)$
+\newcommand\$variable$$value$
+$endfor$
+
+% Custom preamble for PDF conversion (can be set via --metadata-file or -V)
+$if(preamble)$
+$preamble$
+$endif$
+
+% Document Title and Author
+% -------------------------
+$if(title)$
+\title{$title$}
+$endif$
+$if(author)$
+\author{$author$}
+$endif$
+$if(date)$
+\date{$date$}
+$else$
+\date{} % Suppress date if not provided
+$endif$
+
+% BEGIN DOCUMENT
+% --------------
+\begin{document}
+
+% Title Page Generation
+% ---------------------
+$if(title)$
+\maketitle
+$endif$
+
+% Abstract
+% --------
+$if(abstract)$
+\begin{abstract}
+$abstract$
+\end{abstract}
+$endif$
+
+% Table of Contents (THIS IS THE IMPORTANT SECTION TO EDIT)
+% ---------------------------------
+$if(toc)$
+\clearpage
+\tableofcontents
+$endif$
+
+% List of Figures/Tables (if desired)
+% ---------------------------------
+$if(lof)$
+\listoffigures
+$endif$
+$if(lot)$
+\listoftables
+$endif$
+
+% Main document content
+% ---------------------
+$body$
+
+% Appendices (if specified)
+% -----------------------
+$if(appendix)$
+\appendix
+$endif$
+
+% Bibliography
+% ------------
+$if(bibliography)$
+\bibliography{$bibliography$}
+$endif$
+
+% Index
+% -----
+$if(index)$
+\printindex
+$endif$
+
+% End document
+% ------------
+\end{document}
