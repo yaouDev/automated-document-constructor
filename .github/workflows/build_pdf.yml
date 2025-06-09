@@ -52,6 +52,7 @@ jobs:
             --toc-depth=3 \
             --number-sections \
             --template=./templates/template.tex \
+            --variable=date:"${{ env.CURRENT_DATE }}" \
             ${{ steps.markdown_files_list.outputs.file_list }} # the markdown documents found in previous step
 
       - name: Upload PDF artifact
