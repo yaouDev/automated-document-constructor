@@ -39,7 +39,7 @@ jobs:
       - name: Get list of Markdown files in desired order
         id: markdown_files_list
         run: |
-          FILE_LIST=$(find docs -name "*.md" | sort | tr '\n' ' ') # convert newlines to spaces so pandoc can read them as args
+          FILE_LIST=$(find docs -name "*.md" | tr '\n' ' ') # convert newlines to spaces so pandoc can read them as args
           echo "Found Markdown files for PDF compilation: $FILE_LIST"
           echo "file_list=$FILE_LIST" >> $GITHUB_OUTPUT
 
