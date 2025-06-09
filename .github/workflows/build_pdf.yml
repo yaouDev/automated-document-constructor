@@ -20,6 +20,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4 
 
+      - name: Ensure permissions for docs
+        run: |
+          chmod -R +r
+
       - name: Get current date and run number for versioning
         id: version_info
         run: |
