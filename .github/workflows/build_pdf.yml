@@ -22,7 +22,7 @@ jobs:
 
       - name: Ensure permissions for docs
         run: |
-          chmod -R +r
+          chmod -R +r .
 
       - name: Get current date and run number for versioning
         id: version_info
