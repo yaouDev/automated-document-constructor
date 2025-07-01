@@ -51,7 +51,7 @@ jobs:
       - name: Compile PDF with Pandoc
         run: |
           VERSIONED_PDF_FILENAME="${{ env.FILE_BASE_NAME }}-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf"
-          VERSIONED_PDF_FULL_PATH="${{ env.VERSIONS_DIR }}/${{ env.VERSIONED_PDF_FILENAME }}"
+          VERSIONED_PDF_FULL_PATH="${{ env.VERSIONS_DIR }}/${VERSIONED_PDF_FILENAME}"
           LATEST_PDF_FULL_PATH="${{ env.ARTIFACT_DIR }}/${{ env.FILE_BASE_NAME }}.pdf"
 
           echo "VERSIONED_PDF_FULL_PATH_OUT=$VERSIONED_PDF_FULL_PATH" >> $GITHUB_ENV
