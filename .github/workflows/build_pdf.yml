@@ -20,6 +20,11 @@ jobs:
     permissions:
       contents: write
 
+    env:
+      FILE_BASE_NAME: manual # change this to rename your output file!
+      LATEST_ARTIFACT_DIR: artifacts
+      VERSIONS_DIR: ${{ env.LATEST_ARTIFACT_DIR }}/versions
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4 
@@ -45,13 +50,20 @@ jobs:
 
       - name: Compile PDF with Pandoc
         run: |
-          OUTPUT_FILENAME="versions/manual-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf"
-          echo "Compiling PDF as: $OUTPUT_FILENAME"
+          VERSIONED_PDF_FILENAME="${{ env.FILE_BASE_NAME }}-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf"
+          VERSIONED_PDF_FULL_PATH="${{ env.VERSIONS_DIR }}/${{ env.VERSIONED_PDF_FILENAME }}"
+          LATEST_PDF_FULL_PATH="${{ env.LATEST_ARTIFACT_DIR }}/${{ env.FILE_BASE_NAME }}.pdf"
+
+          echo "VERSIONED_PDF_FULL_PATH_OUT=$VERSIONED_PDF_FULL_PATH" >> $GITHUB_ENV
+          echo "LATEST_PDF_FULL_PATH_OUT=$LATEST_PDF_FULL_PATH" >> $GITHUB_ENV
+          echo "VERSIONED_PDF_FILENAME_OUT=$VERSIONED_PDF_FILENAME" >> $GITHUB_ENV
+
+          echo "Compiling PDF as: $VERSIONED_PDF_FULL_PATH"
         
           pandoc \
             --from markdown \
             --to pdf \
-            --output "$OUTPUT_FILENAME" \
+            --output "$VERSIONED_PDF_FULL_PATH" \
             --table-of-contents \
             --toc-depth=3 \
             --number-sections \
@@ -59,11 +71,15 @@ jobs:
             --variable=date:"${{ env.CURRENT_DATE }}" \
             ${{ steps.markdown_files_list.outputs.file_list }} # the markdown documents found in previous step
 
+          cp "$VERSIONED_PDF_FULL_PATH" "$LATEST_PDF_FULL_PATH"
+          echo "Copied PDF to $LATEST_PDF_FULL_PATH"
+
       - name: Upload PDF artifact
         uses: actions/upload-artifact@v4
         with:
-          name: manual-pdf-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}
-          path: versions/manual-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf
+          name: ${{ env.VERSIONED_PDF_FILENAME_OUT }}
+          path: ${{ env.VERSIONED_PDF_FULL_PATH_OUT }}
+          retention-days: 1 # change if you want this to be the primary way to get your artifacts
 
       - name: Configure Git User (Bot)
         run: |
@@ -73,8 +89,9 @@ jobs:
 
       - name: Commit and Push PDF to Repository
         run: |
-          PDF_FILE="versions/manual-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf"
-          git add "$PDF_FILE"
+          git add "${{ env.VERSIONED_PDF_FULL_PATH_OUT }}"
+          git add "${{ env.LATEST_PDF_FULL_PATH_OUT }}"
+          
           if git diff --cached --exit-code; then # check for changes
             echo "No new PDF changes to commit."
           else
