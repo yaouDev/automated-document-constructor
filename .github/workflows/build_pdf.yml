@@ -46,9 +46,8 @@ jobs:
       contents: write
 
     outputs:
-      final_pdf_path:
-        description: 'The full path to the generated versioned PDF document'
-        value: ${{ steps.pandoc_compile.outputs.FINAL_PDF_CALL_PATH }}
+      description: 'The full path to the generated PDF document'
+      value: ${{ steps.pandoc_compile.outputs.FINAL_PDF_CALL_PATH }}
 
     steps:
       - name: Checkout repository
@@ -103,7 +102,7 @@ jobs:
             --number-sections \
             --template=./templates/template.tex \
             --variable=date:"${{ env.CURRENT_DATE }}" \
-            --resource-path="./:${{ inputs.source_images_path }}"
+            --resource-path="./:${{ inputs.source_images_path }}" \
             ${{ steps.markdown_files_list.outputs.file_list }} # the markdown documents found in previous step
 
           cp "$VERSIONED_PDF_FULL_PATH" "$LATEST_PDF_FULL_PATH"
