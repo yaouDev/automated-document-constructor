@@ -22,16 +22,16 @@ jobs:
 
     env:
       FILE_BASE_NAME: manual # change this to rename your output file!
-      LATEST_ARTIFACT_DIR: artifacts
-      VERSIONS_DIR: ${{ env.LATEST_ARTIFACT_DIR }}/versions
+      ARTIFACT_DIR: artifacts
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4 
 
-      - name: Get current date and run number for versioning
+      - name: Set dynamic environment variables
         id: version_info
         run: |
+          echo "VERSIONS_DIR=${{ env.ARTIFACT_DIR }}/versions" >> $GITHUB_ENV
           echo "CURRENT_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
           echo "RUN_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV # used to get unique output everytime a manual is generated
           echo "Generated version suffix: ${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}"
@@ -52,7 +52,7 @@ jobs:
         run: |
           VERSIONED_PDF_FILENAME="${{ env.FILE_BASE_NAME }}-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf"
           VERSIONED_PDF_FULL_PATH="${{ env.VERSIONS_DIR }}/${{ env.VERSIONED_PDF_FILENAME }}"
-          LATEST_PDF_FULL_PATH="${{ env.LATEST_ARTIFACT_DIR }}/${{ env.FILE_BASE_NAME }}.pdf"
+          LATEST_PDF_FULL_PATH="${{ env.ARTIFACT_DIR }}/${{ env.FILE_BASE_NAME }}.pdf"
 
           echo "VERSIONED_PDF_FULL_PATH_OUT=$VERSIONED_PDF_FULL_PATH" >> $GITHUB_ENV
           echo "LATEST_PDF_FULL_PATH_OUT=$LATEST_PDF_FULL_PATH" >> $GITHUB_ENV
