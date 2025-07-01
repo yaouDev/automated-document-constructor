@@ -8,6 +8,31 @@ on:
       - 'docs/**'
       - '.github/workflows/build_pdf.yml'
   workflow_dispatch: # manual trigger
+  workflow_call:
+    inputs:
+      file_base_name:
+        required: false
+        type: string
+        default: 'manual' # change this to your liking!!
+
+      source_docs_path:
+        required: false
+        type: string
+        default: 'docs'
+
+      source_images_path:
+        required: false
+        type: string
+        default: 'images'
+
+    outputs:
+      pdf_path:
+        description: 'The full path to the generated PDF document'
+        value: ${{ jobs.build_pdf.outputs.final_pdf_path }}
+
+      artifact_url:
+        description: 'URL to the workflow run artifacts'
+        value: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,8 +45,10 @@ jobs:
     permissions:
       contents: write
 
-    env:
-      FILE_BASE_NAME: manual # change this to rename your output file!
+    outputs:
+      final_pdf_path:
+        description: 'The full path to the generated versioned PDF document'
+        value: ${{ steps.pandoc_compile.outputs.FINAL_PDF_CALL_PATH }}
 
     steps:
       - name: Checkout repository
@@ -48,19 +75,22 @@ jobs:
       - name: Get list of Markdown files in desired order
         id: markdown_files_list
         run: |
-          FILE_LIST=$(find docs -name "*.md" | sort | tr '\n' ' ') # convert newlines to spaces so pandoc can read them as args
+          FILE_LIST=$(find ${{ inputs.source_docs_path }} -name "*.md" | sort | tr '\n' ' ') # convert newlines to spaces so pandoc can read them as args
           echo "Found Markdown files for PDF compilation: $FILE_LIST"
           echo "file_list=$FILE_LIST" >> $GITHUB_OUTPUT
 
       - name: Compile PDF with Pandoc
+        id: pandoc_compile
         run: |
-          VERSIONED_PDF_FILENAME="${{ env.FILE_BASE_NAME }}-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf"
+          VERSIONED_PDF_FILENAME="${{ inputs.file_base_name }}-${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}.pdf"
           VERSIONED_PDF_FULL_PATH="${{ env.VERSIONS_DIR }}/${VERSIONED_PDF_FILENAME}"
-          LATEST_PDF_FULL_PATH="${{ vars.ARTIFACT_DIR }}/${{ env.FILE_BASE_NAME }}.pdf"
+          LATEST_PDF_FULL_PATH="${{ vars.ARTIFACT_DIR }}/${{ inputs.file_base_name }}.pdf"
 
           echo "VERSIONED_PDF_FULL_PATH_OUT=$VERSIONED_PDF_FULL_PATH" >> $GITHUB_ENV
           echo "LATEST_PDF_FULL_PATH_OUT=$LATEST_PDF_FULL_PATH" >> $GITHUB_ENV
           echo "VERSIONED_PDF_FILENAME_OUT=$VERSIONED_PDF_FILENAME" >> $GITHUB_ENV
+
+          echo "FINAL_PDF_CALL_PATH=$VERSIONED_PDF_FULL_PATH" >> $GITHUB_OUTPUT
 
           echo "Compiling PDF as: $VERSIONED_PDF_FULL_PATH"
         
@@ -73,6 +103,7 @@ jobs:
             --number-sections \
             --template=./templates/template.tex \
             --variable=date:"${{ env.CURRENT_DATE }}" \
+            --resource-path="./:${{ inputs.source_images_path }}"
             ${{ steps.markdown_files_list.outputs.file_list }} # the markdown documents found in previous step
 
           cp "$VERSIONED_PDF_FULL_PATH" "$LATEST_PDF_FULL_PATH"
@@ -84,6 +115,8 @@ jobs:
           name: ${{ env.VERSIONED_PDF_FILENAME_OUT }}
           path: ${{ env.VERSIONED_PDF_FULL_PATH_OUT }}
           retention-days: 1 # change if you want this to be the primary way to get your artifacts
+
+      # Exclude blocks below this line if you do not wish the bot to push the PDFs to the repository -------------------------------------------------------
 
       - name: Configure Git User (Bot)
         run: |
