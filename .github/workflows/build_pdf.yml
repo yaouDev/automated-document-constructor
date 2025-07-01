@@ -9,6 +9,10 @@ on:
       - '.github/workflows/build_pdf.yml'
   workflow_dispatch: # manual trigger
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build_pdf:
     runs-on: ubuntu-latest # use static version?
