@@ -1,0 +1,80 @@
+name: Clean Artifacts Versions Folder
+
+on:
+  workflow_dispatch: # manual trigger only
+
+jobs:
+  clean_versions_folder:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # fetch history
+          fetch-depth: 0
+
+      - name: Configure Git User (Bot)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Set the remote URL with the GITHUB_TOKEN for pushing
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+
+      - name: Define target directory
+        run: |
+          echo "TARGET_VERSIONS_DIR=${{ vars.ARTIFACT_DIR }}/versions" >> $GITHUB_ENV
+          echo "Cleaning directory: ${{ env.TARGET_VERSIONS_DIR }}"
+
+      - name: Check if target versions directory exists
+        id: check_versions_dir
+        run: |
+          if [ -d "${{ env.TARGET_VERSIONS_DIR }}" ]; then
+            echo "dir_exists=true" >> "$GITHUB_OUTPUT"
+            echo "Target directory ${{ env.TARGET_VERSIONS_DIR }} exists. Proceeding with operations."
+          else
+            echo "dir_exists=false" >> "$GITHUB_OUTPUT"
+            echo "Target directory ${{ env.TARGET_VERSIONS_DIR }} does not exist. Skipping subsequent steps."
+          fi
+
+      - name: Zip and Upload All Artifacts Folder
+        if: ${{ steps.check_versions_dir.outputs.dir_exists == 'true' }}
+        run: |
+          ZIP_FILE_NAME="all-artifacts.zip" 
+          
+          echo "Zipping contents of '${{ env.TARGET_VERSIONS_DIR }}' into '$ZIP_FILE_NAME'..."
+          zip -r "$ZIP_FILE_NAME" "${{ env.TARGET_VERSIONS_DIR }}"
+          
+          echo "Created zip file: $ZIP_FILE_NAME"
+          echo "ZIP_FILE_NAME_OUT=$ZIP_FILE_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload All Artifacts Zip
+        if: ${{ steps.check_versions_dir.outputs.dir_exists == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-artifacts-zip
+          path: ./${{ env.ZIP_FILE_NAME_OUT }}
+          retention-days: 14
+
+      - name: Clean the versions folder
+        if: ${{ steps.check_versions_dir.outputs.dir_exists == 'true' }}
+        run: |
+          echo "Removing contents of ${{ env.TARGET_VERSIONS_DIR }}..."
+          rm -rf "${{ env.TARGET_VERSIONS_DIR }}"/*
+          echo "Contents removed."
+
+      - name: Commit and Push Changes
+        if: ${{ steps.check_versions_dir.outputs.dir_exists == 'true' }}
+        run: |
+          git add "${{ env.TARGET_VERSIONS_DIR }}"
+          
+          if git diff --cached --exit-code; then
+            echo "No changes detected to commit (directory was already empty or did not exist)."
+          else
+            git commit -m "chore(cleanup): Cleaned ${{ env.TARGET_VERSIONS_DIR }} [skip ci]"
+            git push origin ${{ github.ref_name }}
+            echo "Successfully committed and pushed changes."
+          fi

@@ -35,6 +35,11 @@ jobs:
           echo "RUN_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV # used to get unique output everytime a manual is generated
           echo "Generated version suffix: ${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}"
 
+      - name: Create artifacts directories
+        run: |
+          mkdir -p ${{ env.VERSIONS_DIR }}
+          echo "Ensured directory ${{ env.VERSIONS_DIR }} exists."
+
       - name: Install Pandoc and LaTeX
         run: |
           sudo apt-get update
