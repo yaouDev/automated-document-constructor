@@ -1,0 +1,59 @@
+name: Setup New Repository Variables
+
+on:
+# Run this after setting up the repo in order to be able to use the workflow
+  workflow_dispatch:
+    inputs:
+      output_dir:
+        description: 'Where your documents will end up'
+        required: true
+        type: string
+        default: 'artifacts'
+      docs_dir:
+        description: 'Where you have your text files'
+        required: true
+        type: string
+        default: 'docs'
+      images_dir:
+        description: 'Where you have your images'
+        required: true
+        type: string
+        default: 'images'
+        
+
+jobs:
+  set_variables:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set Repository Variables
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api \
+            --method PUT \
+            -H "Accept: application/vnd.github.v3+json" \
+            /repos/${{ github.event.repository.owner.login }}/${{ github.event.repository.name }}/actions/variables/ARTIFACTS_DIR \
+            -F name=ARTIFACTS_DIR \
+            -F value="${{ github.event.inputs.output_dir }}"
+
+          gh api \
+            --method PUT \
+            -H "Accept: application/vnd.github.v3+json" \
+            /repos/${{ github.event.repository.owner.login }}/${{ github.event.repository.name }}/actions/variables/DOCS_DIR \
+            -F name=DOCS_DIR \
+            -F value="${{ github.event.inputs.docs_dir }}"
+
+          gh api \
+            --method PUT \
+            -H "Accept: application/vnd.github.v3+json" \
+            /repos/${{ github.event.repository.owner.login }}/${{ github.event.repository.name }}/actions/variables/IMAGES_DIR \
+            -F name=IMAGES_DIR \
+            -F value="${{ github.event.inputs.images_dir }}"
+
+          echo "Successfully set repository variables in ${{ github.event.repository.owner.login }}/${{ github.event.repository.name }}"
