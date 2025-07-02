@@ -65,6 +65,13 @@ jobs:
       uploaded_artifact_name: ${{ env.VERSIONED_PDF_FILENAME_OUT }}
 
     steps:
+      - name: Debug - Print Event Name in Reusable Workflow
+        run: |
+          echo "--- Reusable Workflow Event Debug ---"
+          echo "The event name that triggered THIS reusable workflow is: ${{ github.event_name }}"
+          echo "Is ${{ github.event_name }} equal to 'workflow_call'? ${{ github.event_name == 'workflow_call' }}"
+          echo "--- End Debug ---"
+    
       - name: Checkout repository
         uses: actions/checkout@v4 
 
