@@ -39,6 +39,10 @@ on:
         description: 'URL to the workflow run artifacts'
         value: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
+      artifact_name:
+        description: 'The exact name of the uploaded PDF artifact'
+        value: ${{ jobs.build_pdf.outputs.uploaded_artifact_name }}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -51,14 +55,14 @@ jobs:
       contents: write
 
     env:
-      FILE_BASE_NAME: ${{ inputs.file_base_name || 'my-base-document' }} # change "my-base-document" to your liking!
+      FILE_BASE_NAME: ${{ inputs.file_base_name || 'my-base-document' }} # change "my-base-document" to your liking! TODO: Make repo variable
       ARTIFACT_DIR: ${{ inputs.output_dir || vars.ARTIFACT_DIR }}
       DOCS_DIR: ${{ inputs.docs_dir || vars.DOCS_DIR }}
       IMAGES_DIR: ${{ inputs.images_dir || vars.IMAGES_DIR }}
 
     outputs:
-      description: 'The full path to the generated PDF document'
-      value: ${{ steps.pandoc_compile.outputs.FINAL_PDF_CALL_PATH }}
+      final_pdf_path: ${{ steps.pandoc_compile.outputs.FINAL_PDF_CALL_PATH }}
+      uploaded_artifact_name: ${{ env.VERSIONED_PDF_FILENAME_OUT }}
 
     steps:
       - name: Checkout repository
