@@ -46,7 +46,7 @@ To seamlessly integrate images into your PDF:
 - **Workflow Triggers:** An artifact (PDF) will be built automatically anytime changes are pushed to the `./docs` folder on the `main` branch. You can also manually trigger the `Build PDF` workflow from the "Actions" page in your repository.
 - **Versioned Outputs:** Each new PDF generated will include a timestamp for unique identification (e.g., `manual-2025-07-01.pdf`). These will appear in the `./artifacts/versions` folder.
 - **Cleanup Workflow:** A dedicated workflow (`Clean Artifacts Versions Folder`) is set up to clean the `./artifacts/versions` folder. Before deletion, it will create a `.zip` archive of all files in that folder and make it available as a workflow artifact for 14 days on the Actions page. This provides a safety net for historical versions.
-- **Default Name:** The default base name for your documents ("manual") can be changed by editing the `default` variable of the `file_base_name` block in the workflow_call section within the `build_pdf.yml` file.
+- **Default Name:** The default base name for your documents ("document-<>") can be changed by editing the `default` variable of the `file_base_name` block in the workflow_call section and the alternative value the environment variable `FILE_BASE_NAME` within the `build_pdf.yml` file.
 - **Document Sorting:** Documents are sorted and compiled lexicographically ascending based on their file names. This means using a structured naming convention (e.g., `010-Introduction.md`, `020-Chapter-One.md`) is crucial for logical compilation order, especially when using sub-folders (e.g., `01-Section/010-Page.md`).
 
 ## Advanced Customization
@@ -88,7 +88,7 @@ jobs:
       contents: write # needed for checkout and potentially for committing artifacts back
 
     env:
-        FILE_BASE_NAME: my-project-manual # this is your default name
+        FILE_BASE_NAME: my-document # this is your default name
         SUBMODULE_DIR: docs-source # this is the name of your folder - make it match
 
     steps:
@@ -101,13 +101,10 @@ jobs:
           fetch-depth: 0 # fetch full history
 
       - name: Call Document Constructor Reusable Workflow
-        uses: yaouDev/automated-document-constructor/.github/workflows/build_pdf.yml@main # this is the call to the original build workflow, DO NOT change
+        uses: yaouDev/automated-document-constructor/.github/workflows/build_pdf.yml@main # this is the call to the original build workflow, feel free to host this in your own repository if you'd like
         with:
           # pass inputs to the reusable workflow
-          file_base_name: ${{ env.FILE_BASE_NAME }} # override default 'manual' with your local environment variable
-          # assume your reusable workflow has an input for source_docs_path
-          source_docs_path: './${{ env.SUBMODULE_DIR }}/docs' # assuming docs are in 'docs-source/docs' inside the submodule
-          source_images_path: './${{ env.SUBMODULE_DIR }}/images' # assuming images are in 'docs-source/images' inside the submodule
+          file_base_name: ${{ env.FILE_BASE_NAME }} # override default 'document-call' with your local environment variable
 
         id: build_doc_output # give an ID to capture outputs from the reusable workflow
 
@@ -127,13 +124,15 @@ jobs:
           retention-days: 30
 ```
 
-To add the repository as a sub-module use this command, replacing docs-source to whatever you want the folder to be called:
+To add the repository as a sub-module use this command, replacing "docs-source" to whatever you want the folder to be called:
 
 `git submodule add https://github.com/yaouDev/automated-document-constructor.git docs-source`
 
 Use this command to keep the sub-module updated:
 
 `git submodule update --remote --init --recursive`
+
+*Note that you might want to manually update the YAML workflow instead*
 
 ## License
 
