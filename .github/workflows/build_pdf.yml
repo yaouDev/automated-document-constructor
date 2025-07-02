@@ -115,7 +115,7 @@ jobs:
             --table-of-contents \
             --toc-depth=3 \
             --number-sections \
-            --template="${{ github.workspace }}/templates/template.tex" \
+            --template="./templates/template.tex" \
             --variable=date:"${{ env.CURRENT_DATE }}" \
             --resource-path="./:${{ env.IMAGES_DIR }}" \
             ${{ steps.markdown_files_list.outputs.file_list }} # the markdown documents found in previous step
