@@ -10,6 +10,35 @@ Perfect for:
 
 Got questions or need assistance? Feel free to [open an issue](https://github.com/yaouDev/automated-document-constructor/issues)!
 
+## 🚀 Initial Setup Steps
+
+Before you start developing, you need to configure some essential project settings.
+I've provided an automated GitHub Actions workflow to help you with this.
+The reason it's made this way is so that you can edit your inputs and outputs without creating commits by editting the YAML-file - you can, of course, also change these manually in the settings.
+
+**Please follow these steps:**
+
+1.  **Create a new repository from this template.**
+    Click the "Use this template" button above, then choose "Create a new repository".
+
+2.  **Navigate to the Actions tab in your new repository.**
+    Once your new repository is created, go to its "Actions" tab.
+
+3.  **Run the "Setup New Repository Variables" workflow.**
+    You'll see a workflow named "Setup New Repository Variables" listed. Click on it.
+
+4.  **Click "Run workflow" and provide the required inputs.**
+    You will be prompted to enter the values for `output_dir`, `docs_dir`, and `images_dir`.
+    Fill these in according to your project's needs.
+
+## Project Structure
+
+* `docs/`: Where your text documents live.
+* `images/`: Your project images.
+* `artifacts/`: Generated output files.
+
+(The `output_dir`, `docs_dir`, and `images_dir` variables configured by the workflow will reflect these paths.)
+
 ## Getting Started
 
 Follow these simple steps to generate your PDF document:
@@ -70,58 +99,7 @@ This means the workflow definition itself (`build_pdf.yml`) resides in *this* re
 Instead, in your project's main repository, create a workflow (e.g., `.github/workflows/build_project_docs.yml`) like this:
 
 ```
-name: Build Project Documentation PDF
-
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'docs-source/**' # customize this to trigger whenever you push a documentation update
-  workflow_dispatch:
-
-jobs:
-  build_docs:
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write # needed for checkout and potentially for committing artifacts back
-
-    env:
-        FILE_BASE_NAME: my-document # this is your default name
-        SUBMODULE_DIR: docs-source # this is the name of your folder - make it match
-
-    steps:
-      - name: Checkout main repository
-        uses: actions/checkout@v4
-        with:
-          # if the submodule contains your .md files and images, you must recursively check it out.
-          # if it's a private submodule, ensure your GITHUB_TOKEN has permission or use an SSH key.
-          submodules: recursive 
-          fetch-depth: 0 # fetch full history
-
-      - name: Call Document Constructor Reusable Workflow
-        uses: yaouDev/automated-document-constructor/.github/workflows/build_pdf.yml@main # this is the call to the original build workflow, feel free to host this in your own repository if you'd like
-        with:
-          # pass inputs to the reusable workflow
-          file_base_name: ${{ env.FILE_BASE_NAME }} # override default 'document-call' with your local environment variable
-
-        id: build_doc_output # give an ID to capture outputs from the reusable workflow
-
-      - name: Use PDF Path from Reusable Workflow
-        run: |
-          echo "PDF was generated at: ${{ steps.build_doc_output.outputs.pdf_path }}"
-          # you could then use this path to upload the PDF as an artifact specific to this project's workflow
-          # or integrate it further.
-
-      - name: Upload Generated PDF as Project Artifact (Optional)
-        # this uploads the PDF as an artifact for *this* calling workflow run.
-        if: success() && steps.build_doc_output.outputs.pdf_path != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.FILE_BASE_NAME }}-pdf
-          path: ${{ steps.build_doc_output.outputs.pdf_path }} # this captures the output from the original file
-          retention-days: 30
+TODO
 ```
 
 To add the repository as a sub-module use this command, replacing "docs-source" to whatever you want the folder to be called:
