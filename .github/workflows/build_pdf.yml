@@ -68,6 +68,44 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4 
 
+      - name: Download Template File for Pandoc
+        if: github.event_name == 'workflow_call'
+        run: |
+          TEMPLATE_RAW_URL="https://raw.githubusercontent.com/yaouDev/automated-document-constructor/main/templates/template.tex"
+          LOCAL_TEMPLATE_PATH="${{ runner.temp }}/template.tex"
+
+          echo "Attempting to download template from: $TEMPLATE_RAW_URL"
+          echo "Saving template to: $LOCAL_TEMPLATE_PATH"
+
+          curl -L "$TEMPLATE_RAW_URL" -o "$LOCAL_TEMPLATE_PATH"
+
+          if [ $? -eq 0 ] && [ -f "$LOCAL_TEMPLATE_PATH" ]; then
+              echo "SUCCESS: Template downloaded and is ready at $LOCAL_TEMPLATE_PATH"
+              head -n 5 "$LOCAL_TEMPLATE_PATH"
+              echo "PANDOC_TEMPLATE_FILE_PATH=$LOCAL_TEMPLATE_PATH" >> $GITHUB_ENV
+          else
+              echo "ERROR: Failed to download template. Please double-check the TEMPLATE_RAW_URL."
+              exit 1
+          fi
+
+      - name: Set Template Path
+        run: |
+          TEMPLATE_PATH_FOR_PANDOC=""
+          if [[ "${{ github.event_name }}" == "workflow_call" ]]; then
+            TEMPLATE_PATH_FOR_PANDOC="${{ runner.temp }}/template.tex"
+            echo "Using downloaded template path for workflow_call: $TEMPLATE_PATH_FOR_PANDOC"
+          else
+            TEMPLATE_PATH_FOR_PANDOC="./templates/template.tex"
+            echo "Using local repository template path for ${{ github.event_name }}: $TEMPLATE_PATH_FOR_PANDOC"
+
+            if [ ! -f "$TEMPLATE_PATH_FOR_PANDOC" ]; then
+                echo "ERROR: Local template file NOT found at $TEMPLATE_PATH_FOR_PANDOC for ${{ github.event_name }} event!"
+                echo "Please ensure the template is present in your repository at this path."
+                exit 1
+            fi
+          fi
+          echo "PANDOC_TEMPLATE_FILE_PATH=$TEMPLATE_PATH_FOR_PANDOC" >> $GITHUB_ENV
+
       - name: Set dynamic environment variables
         id: version_info
         run: |
@@ -115,7 +153,7 @@ jobs:
             --table-of-contents \
             --toc-depth=3 \
             --number-sections \
-            --template="./templates/template.tex" \
+            --template="${{ env.PANDOC_TEMPLATE_FILE_PATH }}" \
             --variable=date:"${{ env.CURRENT_DATE }}" \
             --resource-path="./:${{ env.IMAGES_DIR }}" \
             ${{ steps.markdown_files_list.outputs.file_list }} # the markdown documents found in previous step
