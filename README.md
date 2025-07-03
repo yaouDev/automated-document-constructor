@@ -78,6 +78,11 @@ To seamlessly integrate images into your PDF:
 - **Default Name:** The default base name for your documents ("document-<>") can be changed by editing the `default` variable of the `file_base_name` block in the workflow_call section and the alternative value the environment variable `FILE_BASE_NAME` within the `build_pdf.yml` file.
 - **Document Sorting:** Documents are sorted and compiled lexicographically ascending based on their file names. This means using a structured naming convention (e.g., `010-Introduction.md`, `020-Chapter-One.md`) is crucial for logical compilation order, especially when using sub-folders (e.g., `01-Section/010-Page.md`).
 
+## Updating your workflow
+
+As updates are still ongoing and you might not want to pull the entire original repository I've included a workflow which will automatically update your workflow file for you.
+You will have to manually dispatch `Update build_pdf.yml`.
+
 ## Advanced Customization
 
 ### LaTeX Template
