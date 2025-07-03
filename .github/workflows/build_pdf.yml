@@ -106,16 +106,18 @@ jobs:
             if [ $? -eq 0 ] && [ -f "$LOCAL_TEMPLATE_PATH" ]; then
               echo "SUCCESS: Template downloaded and is ready at $LOCAL_TEMPLATE_PATH"
               head -n 5 "$LOCAL_TEMPLATE_PATH"
-              echo "TEMPLATE_PATH=$LOCAL_TEMPLATE_PATH" >> $GITHUB_ENV
+              echo "FINAL_TEMPLATE_PATH=$LOCAL_TEMPLATE_PATH" >> $GITHUB_ENV
             else
               echo "ERROR: Failed to download template. Please double-check the TEMPLATE_RAW_URL."
               exit 1
             fi
+          else
+            echo "FINAL_TEMPLATE_PATH=$DEFAULT_TEMPLATE" >> $GITHUB_ENV
           fi
 
-          if [ ! -f "$TEMPLATE_PATH" ]; then
+          if [ ! -f "$FINAL_TEMPLATE_PATH" ]; then
                 # verify that the template is found
-                echo "ERROR: Local template file NOT found at $TEMPLATE_PATH for ${{ github.event_name }} event!"
+                echo "ERROR: Local template file NOT found at $FINAL_TEMPLATE_PATH for ${{ github.event_name }} event!"
                 exit 1
             fi
 
@@ -158,7 +160,7 @@ jobs:
             --table-of-contents \
             --toc-depth=3 \
             --number-sections \
-            --template="${{ env.TEMPLATE_PATH }}" \
+            --template="${{ env.FINAL_TEMPLATE_PATH }}" \
             --variable=date:"${{ env.CURRENT_DATE }}" \
             --resource-path="./:${{ env.IMAGES_DIR }}" \
             ${{ steps.markdown_files_list.outputs.file_list }} # the markdown documents found in previous step
