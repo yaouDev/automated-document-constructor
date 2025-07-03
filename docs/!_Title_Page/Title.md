@@ -1,7 +1,7 @@
 ---
 title: "Untitled Document"
 author:
-  - John Doe
+  - John Doe 
   - Jane Smith
 subtitle: "Example subtitle"
 lang: en-US # adds some structure to some sentences
