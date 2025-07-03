@@ -90,27 +90,79 @@ This workflow uses a custom LaTeX template located at `./templates/template.tex`
 - The workflow automatically commits the generated PDF(s) to your repository. These commits include the tag `[skip ci]` in their message. This tag is crucial to prevent the workflow from triggering itself in an infinite loop after pushing new artifacts. Do not remove this tag if you modify the commit message.
 - The title page **must** be parsed first
 
-## How to Integrate this as a Document Submodule
+## How to Integrate the Automated Document Constructor as a workflow call
 
-If you manage your project's documentation in a separate Git submodule (e.g., in a `docs-source/` folder) and want to use this repository's automated PDF generation for that content, you'll utilize its **reusable workflow** feature.
-
-This means the workflow definition itself (`build_pdf.yml`) resides in *this* repository, and your project's main repository will call it. You **won't** place the `build_pdf.yml` directly inside your submodule's `.github/workflows/` folder, as GitHub Actions doesn't discover workflows there.
-
-Instead, in your project's main repository, create a workflow (e.g., `.github/workflows/build_project_docs.yml`) like this:
+Instead of cloning this repository, you're able to make a call to its workflow. Simply create a file such as `.github/workflows/build_pdf.yml` and paste the code below.
+You will be prompted to provide some file paths to the directories you are utilizing. Note that you will require at least `images` and `docs` (or your version of them).
 
 ```
-TODO
+name: Build PDF
+
+on:
+  workflow_dispatch:
+    inputs:
+      file_base_name:
+        required: false
+        type: string
+        description: 'What your document should be called'
+        default: 'my-document'
+      output_dir:
+        required: false
+        type: string
+        description: 'Where your documents should end up (if you choose to upload)'
+        default: 'my-artifacts'
+      docs_dir:
+        required: true
+        type: string
+        description: 'Where your text files are placed'
+        default: 'my-documents'
+      images_dir:
+        required: true
+        type: string
+        description: 'Where your images are placed'
+        default: 'my-images'
+      template_path:
+        required: false
+        type: string
+        description: 'Point to your template, "remote_template" will download the default'
+        default: 'remote_template'
+
+jobs:
+  call_pdf_builder:
+    uses: yaouDev/automated-document-constructor/.github/workflows/build_pdf.yml@main
+    permissions:
+      contents: write
+
+    with:
+      file_base_name: ${{ inputs.file_base_name }}
+      output_dir: ${{ inputs.output_dir }}
+      docs_dir: ${{ inputs.docs_dir }}
+      images_dir: ${{ inputs.images_dir }}
+      template_path: ${{ inputs.template_path }}
+
+  post_build_actions:
+    needs: call_pdf_builder
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display Generated PDF Information
+        run: |
+          echo "The PDF was generated and is available at: ${{ needs.call_pdf_builder.outputs.pdf_path }}"
+          echo "You can view the reusable workflow's artifacts here: ${{ needs.call_pdf_builder.outputs.artifact_url }}"
+
+      - name: Download Generated PDF Artifact
+        id: download_pdf
+        if: success() && needs.call_pdf_builder.outputs.pdf_path != '' # Corrected job name
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.call_pdf_builder.outputs.artifact_name }}
+          path: ./downloaded_pdf
+
+      - name: Verify Downloaded PDF (Optional)
+        if: success() && steps.download_pdf.outputs.download-path != ''
+        run: |
+          echo "Downloaded PDF to: $(ls -R ./downloaded_pdf)"
 ```
-
-To add the repository as a sub-module use this command, replacing "docs-source" to whatever you want the folder to be called:
-
-`git submodule add https://github.com/yaouDev/automated-document-constructor.git docs-source`
-
-Use this command to keep the sub-module updated:
-
-`git submodule update --remote --init --recursive`
-
-*Note that you might want to manually update the YAML workflow instead*
 
 ## License
 
