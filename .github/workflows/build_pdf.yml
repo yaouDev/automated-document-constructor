@@ -30,6 +30,12 @@ on:
         type: string
         default: 'images'
 
+      template_path:
+        required: false
+        description: '"remote_template" will download and use the remote_template'
+        type: string
+        default: 'remote_template'
+
     outputs:
       pdf_path:
         description: 'The full path to the generated PDF document'
@@ -49,16 +55,17 @@ concurrency:
 
 jobs:
   build_pdf:
-    runs-on: ubuntu-latest # use static version?
+    runs-on: ubuntu-latest
 
     permissions:
       contents: write
 
     env:
-      FILE_BASE_NAME: ${{ inputs.file_base_name || 'my-base-document' }} # change "my-base-document" to your liking! TODO: Make repo variable
-      ARTIFACT_DIR: ${{ inputs.output_dir || vars.ARTIFACT_DIR }}
-      DOCS_DIR: ${{ inputs.docs_dir || vars.DOCS_DIR }}
-      IMAGES_DIR: ${{ inputs.images_dir || vars.IMAGES_DIR }}
+      FILE_BASE_NAME: ${{ inputs.file_base_name || 'document' }} # change "my-base-document" to your liking! TODO: Add repo variable
+      ARTIFACT_DIR: ${{ inputs.output_dir || vars.ARTIFACT_DIR || 'artifacts' }}
+      DOCS_DIR: ${{ inputs.docs_dir || vars.DOCS_DIR || 'docs' }}
+      IMAGES_DIR: ${{ inputs.images_dir || vars.IMAGES_DIR || 'images' }}
+      DEFAULT_TEMPLATE: './templates/template.tex'
 
     outputs:
       final_pdf_path: ${{ steps.pandoc_compile.outputs.FINAL_PDF_CALL_PATH }}
@@ -75,51 +82,42 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4 
 
-      - name: Download Template File for Pandoc
-        if: github.event_name == 'workflow_call'
-        run: |
-          TEMPLATE_RAW_URL="https://raw.githubusercontent.com/yaouDev/automated-document-constructor/main/templates/template.tex"
-          LOCAL_TEMPLATE_PATH="${{ runner.temp }}/template.tex"
-
-          echo "Attempting to download template from: $TEMPLATE_RAW_URL"
-          echo "Saving template to: $LOCAL_TEMPLATE_PATH"
-
-          curl -L "$TEMPLATE_RAW_URL" -o "$LOCAL_TEMPLATE_PATH"
-
-          if [ $? -eq 0 ] && [ -f "$LOCAL_TEMPLATE_PATH" ]; then
-              echo "SUCCESS: Template downloaded and is ready at $LOCAL_TEMPLATE_PATH"
-              head -n 5 "$LOCAL_TEMPLATE_PATH"
-              echo "PANDOC_TEMPLATE_FILE_PATH=$LOCAL_TEMPLATE_PATH" >> $GITHUB_ENV
-          else
-              echo "ERROR: Failed to download template. Please double-check the TEMPLATE_RAW_URL."
-              exit 1
-          fi
-
-      - name: Set Template Path
-        run: |
-          TEMPLATE_PATH_FOR_PANDOC=""
-          if [[ "${{ github.event_name }}" == "workflow_call" ]]; then
-            TEMPLATE_PATH_FOR_PANDOC="${{ runner.temp }}/template.tex"
-            echo "Using downloaded template path for workflow_call: $TEMPLATE_PATH_FOR_PANDOC"
-          else
-            TEMPLATE_PATH_FOR_PANDOC="./templates/template.tex"
-            echo "Using local repository template path for ${{ github.event_name }}: $TEMPLATE_PATH_FOR_PANDOC"
-
-            if [ ! -f "$TEMPLATE_PATH_FOR_PANDOC" ]; then
-                echo "ERROR: Local template file NOT found at $TEMPLATE_PATH_FOR_PANDOC for ${{ github.event_name }} event!"
-                echo "Please ensure the template is present in your repository at this path."
-                exit 1
-            fi
-          fi
-          echo "PANDOC_TEMPLATE_FILE_PATH=$TEMPLATE_PATH_FOR_PANDOC" >> $GITHUB_ENV
-
       - name: Set dynamic environment variables
         id: version_info
         run: |
           echo "VERSIONS_DIR=${{ env.ARTIFACT_DIR }}/versions" >> $GITHUB_ENV
           echo "CURRENT_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
-          echo "RUN_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV # used to get unique output everytime a manual is generated
+          echo "RUN_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV # used to get unique output everytime a document is generated
           echo "Generated version suffix: ${{ env.CURRENT_DATE }}-${{ env.RUN_NUMBER }}"
+          echo "TEMPLATE_PATH=${{ inputs.template_path || env.DEFAULT_TEMPLATE }}" >> $GITHUB_ENV # check if a template was given, otherwise use default
+
+      - name: Set (& Download) Template Path
+        run: |
+          if [[ "${{ env.TEMPLATE_PATH }}" == "remote_template" ]]; then 
+            echo "No template was given - downloading default"
+            TEMPLATE_RAW_URL="https://raw.githubusercontent.com/yaouDev/automated-document-constructor/main/templates/template.tex"
+            LOCAL_TEMPLATE_PATH="${{ runner.temp }}/template.tex"
+
+            echo "Attempting to download template from: $TEMPLATE_RAW_URL"
+            echo "Saving template to: $LOCAL_TEMPLATE_PATH"
+
+            curl -L "$TEMPLATE_RAW_URL" -o "$LOCAL_TEMPLATE_PATH"
+
+            if [ $? -eq 0 ] && [ -f "$LOCAL_TEMPLATE_PATH" ]; then
+              echo "SUCCESS: Template downloaded and is ready at $LOCAL_TEMPLATE_PATH"
+              head -n 5 "$LOCAL_TEMPLATE_PATH"
+              echo "TEMPLATE_PATH=$LOCAL_TEMPLATE_PATH" >> $GITHUB_ENV
+            else
+              echo "ERROR: Failed to download template. Please double-check the TEMPLATE_RAW_URL."
+              exit 1
+            fi
+          fi
+
+          if [ ! -f "$TEMPLATE_PATH" ]; then
+                # verify that the template is found
+                echo "ERROR: Local template file NOT found at $TEMPLATE_PATH for ${{ github.event_name }} event!"
+                exit 1
+            fi
 
       - name: Create artifacts directories
         run: |
@@ -160,7 +158,7 @@ jobs:
             --table-of-contents \
             --toc-depth=3 \
             --number-sections \
-            --template="${{ env.PANDOC_TEMPLATE_FILE_PATH }}" \
+            --template="${{ env.TEMPLATE_PATH }}" \
             --variable=date:"${{ env.CURRENT_DATE }}" \
             --resource-path="./:${{ env.IMAGES_DIR }}" \
             ${{ steps.markdown_files_list.outputs.file_list }} # the markdown documents found in previous step
