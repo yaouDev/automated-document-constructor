@@ -112,7 +112,7 @@ jobs:
               exit 1
             fi
           else
-            echo "FINAL_TEMPLATE_PATH=$DEFAULT_TEMPLATE" >> $GITHUB_ENV
+            echo "FINAL_TEMPLATE_PATH=$TEMPLATE_PATH" >> $GITHUB_ENV
           fi
 
           if [ ! -f "$FINAL_TEMPLATE_PATH" ]; then
