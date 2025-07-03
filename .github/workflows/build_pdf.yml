@@ -113,7 +113,7 @@ jobs:
             fi
           fi
 
-          if [ ! -f "${{ .envTEMPLATE_PATH}}" ]; then
+          if [ ! -f "${{ env.TEMPLATE_PATH}}" ]; then
                 # verify that the template is found
                 echo "ERROR: Local template file NOT found at $TEMPLATE_PATH for ${{ github.event_name }} event!"
                 exit 1
