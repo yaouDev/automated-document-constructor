@@ -1,0 +1,80 @@
+name: Update build_pdf.yml
+
+on:
+  workflow_dispatch:
+    inputs:
+      remote_repo:
+        description: 'The full path to the remote repository (e.g., yaouDev/automated-document-constructor)'
+        required: true
+        default: 'yaouDev/automated-document-constructor'
+      remote_branch:
+        description: 'The branch of the remote repository to fetch from'
+        required: true
+        default: 'main'
+      target_workflow_path:
+        description: 'The path to the workflow file in the remote repository (e.g., .github/workflows/build_pdf.yml)'
+        required: true
+        default: '.github/workflows/build_pdf.yml'
+      local_workflow_path:
+        description: 'The local path where the workflow file should be updated (e.g., .github/workflows/build_pdf.yml)'
+        required: true
+        default: '.github/workflows/build_pdf.yml'
+
+jobs:
+  update_workflow:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout caller's repository
+        uses: actions/checkout@v4
+        with:
+          path: caller_repo
+
+      - name: Checkout remote repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.remote_repo }}
+          ref: ${{ inputs.remote_branch }}
+          path: remote_repo
+
+      - name: Copy workflow file
+        run: |
+          REMOTE_FILE="${{ inputs.target_workflow_path }}"
+          LOCAL_FILE="caller_repo/${{ inputs.local_workflow_path }}" # Target path in the caller's repo
+
+          # Ensure the local directory exists
+          mkdir -p "$(dirname "$LOCAL_FILE")"
+
+          # Copy the file
+          cp "remote_repo/$REMOTE_FILE" "$LOCAL_FILE"
+          echo "Copied $REMOTE_FILE from remote_repo to $LOCAL_FILE"
+
+      - name: Configure Git
+        run: |
+          cd caller_repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and Push update
+        id: commit_push
+        run: |
+          cd caller_repo
+          git add "${{ inputs.local_workflow_path }}"
+
+          if git diff --cached --exit-code; then
+            echo "No changes detected for ${{ inputs.local_workflow_path }}."
+            echo "::set-output name=has_changes::false"
+          else
+            git commit -m "chore(workflow): Update ${{ inputs.local_workflow_path }} from ${{ inputs.remote_repo }}@${{ inputs.remote_branch }} [skip ci]"
+            git push
+            echo "Successfully updated and pushed ${{ inputs.local_workflow_path }}."
+            echo "::set-output name=has_changes::true"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report status
+        if: steps.commit_push.outputs.has_changes == 'false'
+        run: echo "Workflow file was already up-to-date. No commit needed."
