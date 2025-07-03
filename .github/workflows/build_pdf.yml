@@ -115,8 +115,9 @@ jobs:
             echo "FINAL_TEMPLATE_PATH=$TEMPLATE_PATH" >> $GITHUB_ENV
           fi
 
+      - name: Verify Template Path
+        run: |
           if [ ! -f "$FINAL_TEMPLATE_PATH" ]; then
-                # verify that the template is found
                 echo "ERROR: Local template file NOT found at $FINAL_TEMPLATE_PATH for ${{ github.event_name }} event!"
                 exit 1
             fi
