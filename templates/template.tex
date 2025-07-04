@@ -46,6 +46,7 @@ $endif$
 \setkeys{Gin}{width=\linewidth,keepaspectratio} % Formatting for images
 \usepackage{xurl} % For better URL breaking
 \usepackage{csquotes} % For smarter quotation marks
+\usepackage{float} % For use of Here command
 \usepackage{hyperref} % For hyperlinks and PDF metadata
 \hypersetup{
     colorlinks=true,
@@ -70,6 +71,11 @@ $endif$
 $if(header-includes)$
 $header-includes$
 $endif$
+
+% --- Image Placement Control ---
+\BeforeBeginEnvironment{figure}{\begin{float}[H]}
+\AfterEndEnvironment{figure}{\end{float}}
+% --- End Image Placement Control ---
 
 % --- Custom Footer for Table of Contents ---
 % This section defines a custom footer that appears only on the Table of Contents page.
