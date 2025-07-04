@@ -61,7 +61,7 @@ jobs:
       contents: write
 
     env:
-      FILE_BASE_NAME: ${{ inputs.file_base_name || 'document' }} # change "my-base-document" to your liking! TODO: Add repo variable
+      FILE_BASE_NAME: ${{ inputs.file_base_name || ${{ github.event.repository.name }} }} # change "${{ github.event.repository.name }}" to your liking!
       ARTIFACT_DIR: ${{ inputs.output_dir || vars.ARTIFACT_DIR || 'artifacts' }}
       DOCS_DIR: ${{ inputs.docs_dir || vars.DOCS_DIR || 'docs' }}
       IMAGES_DIR: ${{ inputs.images_dir || vars.IMAGES_DIR || 'images' }}
