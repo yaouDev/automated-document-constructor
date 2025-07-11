@@ -9,6 +9,9 @@ jobs:
   convert-docx-to-pdf:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -48,11 +51,18 @@ jobs:
             fi
           done
 
-      - name: Commit and push generated PDFs
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Docs: Auto-generated PDFs from DOCX changes"
-          branch: ${{ github.ref_name }}
-          file_pattern: "${{ vars.ARTIFACT_DIR || 'artifacts' }}/*.pdf"
+      - name: Configure Git and Push PDFs
+        if: ${{ steps.changed-files.outputs.changed_docx_files != '' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          OUTPUT_DIR="${{ vars.ARTIFACT_DIR || 'artifacts' }}"
+          git add "$OUTPUT_DIR/*.pdf"
+          if git diff --staged --quiet; then
+            echo "No new PDFs to commit."
+          else
+            git commit -m "Docs: Auto-generated PDFs from DOCX changes"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
