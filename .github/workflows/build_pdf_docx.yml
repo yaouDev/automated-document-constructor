@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'docx/**'
+  workflow_dispatch:
+    
 
 jobs:
   convert-docx-to-pdf:
@@ -30,7 +32,7 @@ jobs:
         id: changed-files
         run: |
           echo "Detecting changed DOCX files in docx..."
-          CHANGED_DOCX_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.event.before }} ${{ github.sha }} | grep 'docx/.*\.docx$')
+          CHANGED_DOCX_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.event.before }} ${{ github.sha }} | grep 'docx/.*\.docx$' | tr '\n' ' ')
           echo "changed_docx_files=${CHANGED_DOCX_FILES}" >> $GITHUB_OUTPUT
           echo "Found the following changed/added DOCX files:"
           echo "${CHANGED_DOCX_FILES}"
@@ -69,3 +71,18 @@ jobs:
           file_pattern: "${{ vars.ARTIFACT_DIR || 'artifacts' }}/*.pdf"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Send Teams Notification
+        if: success() || failure() # Send notification on success or failure
+        uses: microsoft/teams-github-action@v2
+        with:
+          webhookUrl: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          message: |
+            **GitHub Actions Workflow Status:**
+            Repository: ${{ github.repository }}
+            Workflow: Convert DOCX to PDF
+            Status: ${{ job.status }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            ${{ steps.changed-files.outputs.changed_docx_files != '' && format('Generated PDF(s) for: {0}', steps.changed-files.outputs.changed_docx_files) || 'No new PDFs generated.' }}
