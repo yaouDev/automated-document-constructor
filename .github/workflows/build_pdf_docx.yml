@@ -1,4 +1,4 @@
-name: Convert DOCX to LaTeX PDF
+name: Convert DOCX to PDF
 
 on:
   push:
@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install Pandoc and TeX Live packages
         run: |
@@ -27,8 +29,8 @@ jobs:
       - name: Get changed or added DOCX files
         id: changed-files
         run: |
-          echo "Detecting changed DOCX files in docs/docx..."
-          CHANGED_DOCX_FILES=$(git diff --name-only HEAD~1 HEAD | grep 'docx/.*\.docx$')
+          echo "Detecting changed DOCX files in docx..."
+          CHANGED_DOCX_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.event.before }} ${{ github.sha }} | grep 'docx/.*\.docx$')
           echo "changed_docx_files=${CHANGED_DOCX_FILES}" >> $GITHUB_OUTPUT
           echo "Found the following changed/added DOCX files:"
           echo "${CHANGED_DOCX_FILES}"
@@ -44,7 +46,11 @@ jobs:
           for docx_file in ${{ steps.changed-files.outputs.changed_docx_files }}; do
             if [ -f "$docx_file" ]; then
               base_name=$(basename "$docx_file" .docx)
-              output_pdf="$OUTPUT_DIR/${base_name}.pdf"
+
+              current_timestamp=$(date +%Y%m%d)
+              final_base_name="${base_name}_${current_timestamp}"
+
+              output_pdf="$OUTPUT_DIR/${final_base_name}.pdf"
 
               echo "Converting '$docx_file' to '$output_pdf'..."
               pandoc "$docx_file" -o "$output_pdf" --pdf-engine=xelatex
