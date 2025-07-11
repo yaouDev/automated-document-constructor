@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'docx/**'
+  workflow_dispatch:
 
 jobs:
   convert-docx-to-pdf:
