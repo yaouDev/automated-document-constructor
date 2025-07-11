@@ -5,7 +5,6 @@ on:
     paths:
       - 'docx/**'
   workflow_dispatch:
-    
 
 jobs:
   convert-docx-to-pdf:
@@ -71,6 +70,7 @@ jobs:
           file_pattern: "${{ vars.ARTIFACT_DIR || 'artifacts' }}/*.pdf"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+<<<<<<< HEAD
 
       - name: Send Teams Notification
         if: success() || failure() # Send notification on success or failure
@@ -86,3 +86,5 @@ jobs:
             Commit: ${{ github.sha }}
             [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
             ${{ steps.changed-files.outputs.changed_docx_files != '' && format('Generated PDF(s) for: {0}', steps.changed-files.outputs.changed_docx_files) || 'No new PDFs generated.' }}
+=======
+>>>>>>> 80e511e36d6cae9b0bfec4b6417c6b175364a4a5
