@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - 'docx/**'
-  workflow_dispatch:
 
 jobs:
   convert-docx-to-pdf:
@@ -18,19 +17,16 @@ jobs:
 
       - name: Install Pandoc and TeX Live packages
         run: |
-          echo "Updating apt-get and installing Pandoc and TeX Live packages..."
           sudo apt-get update
           sudo apt-get install -y \
             pandoc \
             texlive-latex-extra \
             texlive-fonts-recommended \
             texlive-xetex
-          echo "Installation complete."
 
       - name: Get changed or added DOCX files
         id: changed-files
         run: |
-          echo "Detecting changed DOCX files in docx..."
           CHANGED_DOCX_FILES=$(git diff-tree --no-commit-id --name-only -r ${{ github.event.before }} ${{ github.sha }} | grep 'docx/.*\.docx$' | tr '\n' ' ')
           echo "changed_docx_files=${CHANGED_DOCX_FILES}" >> $GITHUB_OUTPUT
           echo "Found the following changed/added DOCX files:"
@@ -40,27 +36,17 @@ jobs:
         if: ${{ steps.changed-files.outputs.changed_docx_files != '' }}
         run: |
           OUTPUT_DIR="${{ vars.ARTIFACT_DIR || 'artifacts' }}"
-          echo "Starting DOCX to PDF conversion to directory: $OUTPUT_DIR..."
           mkdir -p "$OUTPUT_DIR"
-          echo "Output directory '$OUTPUT_DIR' ensured."
 
           for docx_file in ${{ steps.changed-files.outputs.changed_docx_files }}; do
             if [ -f "$docx_file" ]; then
               base_name=$(basename "$docx_file" .docx)
-
               current_timestamp=$(date +%Y%m%d)
               final_base_name="${base_name}_${current_timestamp}"
-
               output_pdf="$OUTPUT_DIR/${final_base_name}.pdf"
-
-              echo "Converting '$docx_file' to '$output_pdf'..."
               pandoc "$docx_file" -o "$output_pdf" --pdf-engine=xelatex
-              echo "Successfully converted '$docx_file'."
-            else
-              echo "Warning: '$docx_file' was listed as changed but not found. Skipping conversion."
             fi
           done
-          echo "DOCX to PDF conversion complete."
 
       - name: Commit and push generated PDFs
         uses: stefanzweifel/git-auto-commit-action@v5
@@ -70,3 +56,18 @@ jobs:
           file_pattern: "${{ vars.ARTIFACT_DIR || 'artifacts' }}/*.pdf"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Send Teams Notification
+        if: success() || failure()
+        uses: microsoft/teams-github-action@v2
+        with:
+          webhookUrl: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          message: |
+            **GitHub Actions Workflow Status:**
+            Repository: ${{ github.repository }}
+            Workflow: Convert DOCX to PDF
+            Status: ${{ job.status }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            ${{ steps.changed-files.outputs.changed_docx_files != '' && format('Generated PDF(s) for: {0}', steps.changed-files.outputs.changed_docx_files) || 'No new PDFs generated.' }}
