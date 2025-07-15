@@ -183,13 +183,14 @@ jobs:
 
       - name: Configure Git User (Bot)
         id: bot-config
-        if: ${{ inputs.output_bool || github.event_name == 'workflow_dispatch' }}
+        if: ${{ inputs.output_bool || github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
 
       - name: Commit and Push PDF to Repository
+        if: ${{ steps.bot-config.outcome == 'success' }}
         run: |
           git add "${{ env.VERSIONED_PDF_FULL_PATH_OUT }}"
           git add "${{ env.LATEST_PDF_FULL_PATH_OUT }}"
