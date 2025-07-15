@@ -72,13 +72,6 @@ jobs:
       uploaded_artifact_name: ${{ env.VERSIONED_PDF_FILENAME_OUT }}
 
     steps:
-      - name: Debug - Print Event Name in Reusable Workflow
-        run: |
-          echo "--- Reusable Workflow Event Debug ---"
-          echo "The event name that triggered THIS reusable workflow is: ${{ github.event_name }}"
-          echo "Is ${{ github.event_name }} equal to 'workflow_call'? ${{ github.event_name == 'workflow_call' }}"
-          echo "--- End Debug ---"
-    
       - name: Checkout repository
         uses: actions/checkout@v4 
 
@@ -127,17 +120,17 @@ jobs:
           mkdir -p ${{ env.VERSIONS_DIR }}
           echo "Ensured directory ${{ env.VERSIONS_DIR }} exists."
 
-      - name: Install Pandoc and LaTeX
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pandoc texlive-latex-extra texlive-fonts-recommended
-
       - name: Get list of Markdown files in desired order
         id: markdown_files_list
         run: |
           FILE_LIST=$(find ${{ env.DOCS_DIR }} -name "*.md" | sort | tr '\n' ' ') # convert newlines to spaces so pandoc can read them as args
           echo "Found Markdown files for PDF compilation: $FILE_LIST"
           echo "file_list=$FILE_LIST" >> $GITHUB_OUTPUT
+
+      - name: Install Pandoc and LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-latex-extra texlive-fonts-recommended
 
       - name: Compile PDF with Pandoc
         id: pandoc_compile
