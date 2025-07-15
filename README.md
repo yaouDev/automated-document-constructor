@@ -134,7 +134,7 @@ on:
 
 jobs:
   call_pdf_builder:
-    uses: yaouDev/automated-document-constructor/.github/workflows/build_pdf.yml@main
+    uses: yaouDev/automated-document-constructor@latest
     permissions:
       contents: write
 
@@ -157,7 +157,7 @@ jobs:
 
       - name: Download Generated PDF Artifact
         id: download_pdf
-        if: success() && needs.call_pdf_builder.outputs.pdf_path != '' # Corrected job name
+        if: success() && needs.call_pdf_builder.outputs.pdf_path != ''
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.call_pdf_builder.outputs.artifact_name }}
