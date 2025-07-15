@@ -78,6 +78,10 @@ jobs:
       uploaded_artifact_name: ${{ env.VERSIONED_PDF_FILENAME_OUT }}
 
     steps:
+      - name: Event Info
+        run: |
+          echo "Action was initiated by ${{ github.event_name }}"
+    
       - name: Checkout repository
         uses: actions/checkout@v4 
 
@@ -179,7 +183,7 @@ jobs:
 
       - name: Configure Git User (Bot)
         id: bot-config
-        if: ${{ inputs.output_bool == true }}
+        if: ${{ inputs.output_bool || github.event_name == 'workflow_dispatch' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
