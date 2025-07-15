@@ -134,7 +134,7 @@ on:
 
 jobs:
   call_pdf_builder:
-    uses: yaouDev/automated-document-constructor@latest
+    uses: yaouDev/automated-document-constructor/.github/workflows/build_pdf.yml@main
     permissions:
       contents: write
 
